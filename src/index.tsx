@@ -7,7 +7,20 @@ import App from './App';
 
 const client = new ApolloClient({
   uri: 'https://api.spacex.land/graphql',
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          launch(_, { args, toReference }) {
+            return toReference({
+              __typename: 'Launch',
+              id: args?.id,
+            });
+          },
+        },
+      },
+    },
+  }),
 });
 
 ReactDOM.render(
