@@ -1,26 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
+import { gql } from '@apollo/client';
+
+import useQuery from './useQuery';
 import './App.css';
 
+interface Launch {
+  mission_name: string;
+}
+
+interface PastLaunchesData {
+  launchesPast: Launch[];
+}
+
+interface PastLaunchesVars {
+  limit: number;
+}
+
+const GET_PAST_LAUNCHES = gql`
+  query GetPastLaunches($limit: Int!) {
+    launchesPast(limit: $limit) {
+      mission_name
+    }
+  }
+`;
+
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const { loading, data } = useQuery<PastLaunchesData, PastLaunchesVars>(GET_PAST_LAUNCHES, {
+    variables: { limit: 10 },
+    refetchOnWindowFocus: true,
+  });
+
+  if (loading) return <div>loading...</div>;
+
+  return <div className="App">{data && data.launchesPast.map((launch) => <div>{launch.mission_name}</div>)}</div>;
 }
 
 export default App;
