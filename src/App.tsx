@@ -51,11 +51,11 @@ const GET_LAUNCH = gql`
 function App() {
   const [selectedLaunchId, setSelectedLaunchId] = useState<string | undefined>();
   const { loading, data } = useQuery<PastLaunchesData, PastLaunchesVars>(GET_PAST_LAUNCHES, {
-    variables: { limit: 10 },
+    variables: { limit: 5 },
     refetchOnWindowFocus: true,
   });
 
-  const { data: launchData } = useQuery<LaunchData, LaunchVars>(GET_LAUNCH, {
+  const { data: launchData, client } = useQuery<LaunchData, LaunchVars>(GET_LAUNCH, {
     variables: { id: selectedLaunchId ?? '' },
     skip: !selectedLaunchId,
     returnPartialData: true,
@@ -67,7 +67,17 @@ function App() {
     <div className="App">
       {data &&
         data.launchesPast.map((launch) => (
-          <div key={launch.mission_name} onClick={() => setSelectedLaunchId(launch.id)}>
+          <div
+            style={{ cursor: 'pointer', padding: '5px' }}
+            key={launch.mission_name}
+            onClick={() => setSelectedLaunchId(launch.id)}
+            onMouseOver={() => {
+              client.query({
+                query: GET_LAUNCH,
+                variables: { id: launch.id },
+              });
+            }}
+          >
             {launch.mission_name}
           </div>
         ))}
