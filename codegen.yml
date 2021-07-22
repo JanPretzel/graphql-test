@@ -1,0 +1,19 @@
+overwrite: true
+schema: 'https://api.spacex.land/graphql/'
+documents: 'src/**/*.graphql'
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-resolvers'
+      - 'typescript-document-nodes'
+    config:
+      gqlImport: urql#gql
+      nameSuffix: 'Query'
+      operationResultSuffix: 'Data'
+      skipTypeNameForRoot: true
+      skipTypename: true
+  src/generated/urql-introspection.ts:
+    plugins:
+      - 'urql-introspection'
