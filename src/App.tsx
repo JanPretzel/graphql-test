@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useQuery, gql } from 'urql';
+import { useQuery, gql, useClient } from 'urql';
 
-import { urqlClient } from '.';
 import './App.css';
 
 interface PastLaunch {
@@ -49,6 +48,7 @@ const LaunchQuery = gql`
 `;
 
 function App() {
+  const client = useClient();
   const [selectedLaunchId, setSelectedLaunchId] = useState<string | undefined>();
   const [{ data, fetching }] = useQuery<PastLaunchesData, PastLaunchesVars>({
     query: PastLauncesQuery,
@@ -72,7 +72,7 @@ function App() {
             key={launch.mission_name}
             onClick={() => setSelectedLaunchId(launch.id)}
             onMouseOver={() => {
-              urqlClient.query<LaunchData, LaunchVars>(LaunchQuery, { id: launch.id }).toPromise();
+              client.query<LaunchData, LaunchVars>(LaunchQuery, { id: launch.id }).toPromise();
             }}
           >
             {launch.mission_name}
