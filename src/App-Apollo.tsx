@@ -1,8 +1,20 @@
-import { useState } from 'react';
-import { useQuery, gql } from 'urql';
+import { gql } from '@apollo/client';
 
-import { urqlClient } from '.';
+import useQuery from './useQuery';
 import './App.css';
+import { useState } from 'react';
+
+interface LaunchData {
+  launch: {
+    id: string;
+    mission_name: string;
+    details: string;
+  };
+}
+
+interface LaunchVars {
+  id: string;
+}
 
 interface PastLaunch {
   id: string;
@@ -17,8 +29,8 @@ interface PastLaunchesVars {
   limit: number;
 }
 
-const PastLauncesQuery = gql`
-  query GetPastLaunces($limit: Int!) {
+const GET_PAST_LAUNCHES = gql`
+  query GetPastLaunches($limit: Int!) {
     launchesPast(limit: $limit) {
       id
       mission_name
@@ -26,19 +38,7 @@ const PastLauncesQuery = gql`
   }
 `;
 
-interface LaunchData {
-  launch: {
-    id: string;
-    mission_name: string;
-    details: string;
-  };
-}
-
-interface LaunchVars {
-  id: string;
-}
-
-const LaunchQuery = gql`
+const GET_LAUNCH = gql`
   query GetLaunch($id: ID!) {
     launch(id: $id) {
       id
@@ -50,18 +50,18 @@ const LaunchQuery = gql`
 
 function App() {
   const [selectedLaunchId, setSelectedLaunchId] = useState<string | undefined>();
-  const [{ data, fetching }] = useQuery<PastLaunchesData, PastLaunchesVars>({
-    query: PastLauncesQuery,
+  const { loading, data } = useQuery<PastLaunchesData, PastLaunchesVars>(GET_PAST_LAUNCHES, {
     variables: { limit: 5 },
+    refetchOnWindowFocus: true,
   });
 
-  const [{ data: launchData }] = useQuery<LaunchData, LaunchVars>({
-    query: LaunchQuery,
+  const { data: launchData, client } = useQuery<LaunchData, LaunchVars>(GET_LAUNCH, {
     variables: { id: selectedLaunchId ?? '' },
-    pause: !selectedLaunchId,
+    skip: !selectedLaunchId,
+    returnPartialData: true,
   });
 
-  if (fetching) return <div>loading...</div>;
+  if (loading) return <div>loading...</div>;
 
   return (
     <div className="App">
@@ -72,7 +72,10 @@ function App() {
             key={launch.mission_name}
             onClick={() => setSelectedLaunchId(launch.id)}
             onMouseOver={() => {
-              urqlClient.query<LaunchData, LaunchVars>(LaunchQuery, { id: launch.id }).toPromise();
+              client.query({
+                query: GET_LAUNCH,
+                variables: { id: launch.id },
+              });
             }}
           >
             {launch.mission_name}
